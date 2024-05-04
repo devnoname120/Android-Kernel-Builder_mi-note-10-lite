@@ -108,7 +108,7 @@ jobs:
             toolchain_branch=$(echo $toolchains | jq -r ".[$i].branch")
             # From archive
             toolchain_url=$(echo $toolchains | jq -r ".[$i].url")
-            
+
             echo $toolchain_url
             if [ -z "${toolchain_url:-}" ] || [ "$toolchain_url" = "null" ];  then
               git clone --recursive --depth=1 -j $(nproc) --branch $toolchain_branch $toolchain_repo $toolchain_name
@@ -179,7 +179,7 @@ jobs:
             fi
             args="$args $key=$value"
           done < <(jq -r '.externalCommand | to_entries[] | "\(.key)=\(.value)"' <<< "$params")
-        
+
           echo "🤔 $args"
           echo "ARCH=$ARCH" >> $GITHUB_OUTPUT
           echo "args=$args" >> $GITHUB_OUTPUT
@@ -214,6 +214,11 @@ jobs:
           echo "PATH Variable: $PATH"
           make ${{ env.args }} ${{ env.DEFCONFIG_NAME }}
 
+      - name: "🔐 Generate selinux headers"
+        working-directory: ${{ env.KERNEL_NAME }}
+        run: |
+          gcc scripts/selinux/genheaders/genheaders.c -I./include/uapi -I./include -I./security/selinux/include -o scripts/selinux/genheaders/genheaders
+          ./scripts/selinux/genheaders/genheaders include/linux/flask.h include/linux/av_permissions.h
       - name: "🎶 Build kernel"
         working-directory: ${{ env.KERNEL_NAME }}
         env:
