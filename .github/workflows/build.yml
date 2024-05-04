@@ -218,7 +218,7 @@ jobs:
         working-directory: ${{ env.KERNEL_NAME }}
         run: |
           gcc scripts/selinux/genheaders/genheaders.c -I./include/uapi -I./include -I./security/selinux/include -o scripts/selinux/genheaders/genheaders
-          ./scripts/selinux/genheaders/genheaders include/linux/flask.h include/linux/av_permissions.h
+          ./scripts/selinux/genheaders/genheaders security/selinux/ss/flask.h security/selinux/ss/av_permissions.h
       - name: "🎶 Build kernel"
         working-directory: ${{ env.KERNEL_NAME }}
         env:
