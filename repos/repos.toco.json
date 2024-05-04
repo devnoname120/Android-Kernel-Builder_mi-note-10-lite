@@ -7,7 +7,7 @@
       "device": "toco",
       "defconfig": "toco_defconfig"
     },
-    "withKernelSU": false,
+    "withKernelSU": true,
     "toolchains": [
       {
         "repo": "https://gitlab.com/PixelOS-Devices/playgroundtc",
