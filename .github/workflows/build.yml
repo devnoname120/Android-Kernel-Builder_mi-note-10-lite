@@ -200,8 +200,11 @@ jobs:
 
           curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next
 
-          echo "💡 KernelSU Next version:"
-          echo -e "KERNELSU_NEXT_VERSION=$(git -C KernelSU-Next describe --abbrev=0 --tags)" >> $GITHUB_OUTPUT
+          KERNELSU_NEXT_VERSION=$(git -C KernelSU-Next describe --abbrev=0 --tags)
+
+          echo "💡 KernelSU Next version: $KERNELSU_NEXT_VERSION"
+
+          echo -e "KERNELSU_NEXT_VERSION=$KERNELSU_NEXT_VERSION" >> $GITHUB_OUTPUT
 
           echo -e "CONFIG_KPROBES=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
           echo -e "CONFIG_HAVE_KPROBES=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
