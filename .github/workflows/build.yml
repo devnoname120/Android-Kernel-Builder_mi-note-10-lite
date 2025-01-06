@@ -299,12 +299,16 @@ jobs:
 
       - name: 🧧 Create GitHub Release => (${{ env.builddate }})
         continue-on-error: true
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2.2.0
         if: ${{ env.useAnykernel == 'true' && env.release == 'true' }}
         with:
           tag_name: v${{ env.builddate }}.${{ github.run_number }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}
           name: v${{ env.builddate }}.${{ github.run_number }} (KernelSU Next ${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }})
           make_latest: true
+          prerelease: false
+          draft: false
           generate_release_notes: false
-          body: "KernelSU Next for Xiaomi Mi Note 10 Lite (toco).\n\n**Installation:**\n1. Flash the kernel from this release.\n2. Download and install the KernelSU Next manager APK from here: https://github.com/rifsxd/KernelSU-Next/releases/${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}"
+          body: "Linux kernel patched with KernelSU Next ${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }} for Xiaomi Mi Note 10 Lite (toco).\n\n**Installation:**\n1. Flash the kernel from this release.\n2. Download and install the KernelSU Next manager APK from here: https://github.com/rifsxd/KernelSU-Next/releases/${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}"
           files: "${{ env.WORKSPACE }}/${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}_${{ env.builddate }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}.zip"
+          fail_on_unmatched_files: true
+          preserve_order: true
