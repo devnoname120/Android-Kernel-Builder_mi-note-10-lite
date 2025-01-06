@@ -184,7 +184,8 @@ jobs:
           echo "ARCH=$ARCH" >> $GITHUB_OUTPUT
           echo "args=$args" >> $GITHUB_OUTPUT
 
-      - name: "😋 Update KernelSU"
+      - name: "😋 Integrate KernelSU Next"
+        id: integrate-kernelsu-next
         working-directory: ${{ env.KERNEL_NAME }}
         env:
           arch: ${{ steps.generate-args.outputs.ARCH }}
@@ -198,6 +199,9 @@ jobs:
           fi
 
           curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next
+
+          echo "💡 KernelSU Next version:"
+          echo -e "KERNELSU_NEXT_VERSION=$(git -C KernelSU-Next describe --abbrev=0 --tags)" >> $GITHUB_OUTPUT
 
           echo -e "CONFIG_KPROBES=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
           echo -e "CONFIG_HAVE_KPROBES=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
@@ -237,36 +241,36 @@ jobs:
         env:
           arch: ${{ steps.generate-args.outputs.ARCH }}
         with:
-          name: Image.gz-${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}-${{ env.builddate }}
+          name: Image.gz-${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}-${{ env.builddate }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}
           path: ${{ env.OUT_DIR }}/arch/${{ env.arch }}/boot/Image.gz
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 90
 
       - name: "💜 Upload dtb"
         uses: actions/upload-artifact@v3
         env:
           arch: ${{ steps.generate-args.outputs.ARCH }}
         with:
-          name: dtb-${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}-${{ env.builddate }}
+          name: dtb-${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}-${{ env.builddate }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}
           path: ${{ env.OUT_DIR }}/arch/${{ env.arch }}/boot/dtb
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 90
 
       - name: "❤️ Upload dtbo.img"
         uses: actions/upload-artifact@v3
         env:
           arch: ${{ steps.generate-args.outputs.ARCH }}
         with:
-          name: dtbo.img-${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}-${{ env.builddate }}
+          name: dtbo.img-${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}-${{ env.builddate }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}
           path: ${{ env.OUT_DIR }}/arch/${{ env.arch }}/boot/dtbo.img
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 90
 
       - name: "❤️ Pack AnyKernel3.zip"
         if: ${{ env.useAnykernel == 'true' }}
         env:
           arch: ${{ steps.generate-args.outputs.ARCH }}
-          anykernel: "${{ env.WORKSPACE }}/${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}_${{ env.builddate }}"
+          anykernel: "${{ env.WORKSPACE }}/${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}_${{ env.builddate }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}"
         run: |
           ls -al
 
@@ -287,7 +291,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: ${{ env.useAnykernel == 'true' }}
         with:
-          name: "${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}_${{ env.builddate }}"
+          name: "${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}_${{ env.builddate }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}"
           path: AnyKernel3/*
 
       - name: 🧧 Create GitHub Release => (${{ env.builddate }})
@@ -295,6 +299,9 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: ${{ env.useAnykernel == 'true' && env.release == 'true' }}
         with:
-          tag_name: v${{ env.builddate }}.${{ github.run_number }}
-          files: "${{ env.WORKSPACE }}/${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}_${{ env.builddate }}.zip"
-          generate_release_notes: true
+          tag_name: v${{ env.builddate }}.${{ github.run_number }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}
+          name: v${{ env.builddate }}.${{ github.run_number }} (KernelSU Next ${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }})
+          make_latest: true
+          generate_release_notes: false
+          body: "KernelSU Next for Xiaomi Mi Note 10 Lite (toco).\n\n**Installation:**\n1. Flash the kernel from this release.\n2. Download and install the KernelSU Next manager APK from here: https://github.com/rifsxd/KernelSU-Next/releases/${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}"
+          files: "${{ env.WORKSPACE }}/${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}_${{ env.builddate }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}.zip"
