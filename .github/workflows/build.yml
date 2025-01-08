@@ -210,6 +210,8 @@ jobs:
           echo -e "CONFIG_HAVE_KPROBES=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
           echo -e "CONFIG_KPROBE_EVENTS=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
 
+          echo -e 'CONFIG_KSU=y' >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+
           cat arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
 
       - name: "👍 Make defconfig"
