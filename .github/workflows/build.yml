@@ -50,6 +50,7 @@ jobs:
       DEFCONFIG_NAME: ${{ matrix.repos.kernelSource.defconfig }}
 
       withKernelSU: ${{ matrix.repos.withKernelSU }}
+      withSUSFS: ${{ matrix.repos.withSUSFS }}
       ccache: ${{ matrix.repos.ccache }}
       useAnykernel: ${{ matrix.repos.AnyKernel3.use }}
       release: ${{ matrix.repos.AnyKernel3.release }}
@@ -214,6 +215,55 @@ jobs:
 
           cat arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
 
+      - name: "🥷 Add SUSFS patches"
+        id: add-susfs-patches
+        working-directory: ${{ env.KERNEL_NAME }}
+        env:
+          arch: ${{ steps.generate-args.outputs.ARCH }}
+        if: ${{ env.withKernelSU == 'true' && env.withSUSFS == 'true' }}
+        run: |
+          echo -e 'CONFIG_LOCALVERSION="-g7f6bd6b2a3b2"' >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+
+          if [ -d "./SUSFS" ]; then
+            rm -rf "./SUSFS"
+          fi
+
+          SUSFS_KERNEL_VERSION=4.14
+          SUSFS_BRANCH=kernel-$SUSFS_KERNEL_VERSION
+
+          git clone --recursive -j $(nproc) --branch $SUSFS_BRANCH https://gitlab.com/simonpunk/susfs4ksu.git SUSFS
+
+          SUSFS_REF=$(git -C SUSFS rev-parse --short HEAD)
+          echo -e "SUSFS_REF=$SUSFS_REF" >> $GITHUB_OUTPUT
+          echo -e "SUSFS_BRANCH=$SUSFS_BRANCH" >> $GITHUB_OUTPUT
+
+
+
+          cp SUSFS/kernel_patches/fs/* fs/
+          cp SUSFS/kernel_patches/include/linux/* include/linux/
+
+          patch -d KernelSU-Next -p1 < SUSFS/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch
+          patch -p1 < SUSFS/kernel_patches/50_add_susfs_in_kernel-$KERN_VER.patch
+
+          echo -e "CONFIG_KSU_SUSFS=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e "CONFIG_KSU_SUSFS_SUS_PATH=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e "CONFIG_KSU_SUSFS_SUS_SU=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+
+          cat arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+
       - name: "👍 Make defconfig"
         working-directory: ${{ env.KERNEL_NAME }}
         env:
@@ -246,7 +296,7 @@ jobs:
         env:
           arch: ${{ steps.generate-args.outputs.ARCH }}
         with:
-          name: Image.gz-${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}-${{ env.builddate }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}
+          name: Image.gz-${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}-${{ env.builddate }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}_SUSFS
           path: ${{ env.OUT_DIR }}/arch/${{ env.arch }}/boot/Image.gz
           if-no-files-found: ignore
           retention-days: 90
@@ -256,7 +306,7 @@ jobs:
         env:
           arch: ${{ steps.generate-args.outputs.ARCH }}
         with:
-          name: dtb-${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}-${{ env.builddate }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}
+          name: dtb-${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}-${{ env.builddate }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}_SUSFS
           path: ${{ env.OUT_DIR }}/arch/${{ env.arch }}/boot/dtb
           if-no-files-found: ignore
           retention-days: 90
@@ -266,7 +316,7 @@ jobs:
         env:
           arch: ${{ steps.generate-args.outputs.ARCH }}
         with:
-          name: dtbo.img-${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}-${{ env.builddate }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}
+          name: dtbo.img-${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}-${{ env.builddate }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}_SUSFS
           path: ${{ env.OUT_DIR }}/arch/${{ env.arch }}/boot/dtbo.img
           if-no-files-found: ignore
           retention-days: 90
@@ -275,7 +325,7 @@ jobs:
         if: ${{ env.useAnykernel == 'true' }}
         env:
           arch: ${{ steps.generate-args.outputs.ARCH }}
-          anykernel: "${{ env.WORKSPACE }}/${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}_${{ env.builddate }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}"
+          anykernel: "${{ env.WORKSPACE }}/${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}_${{ env.builddate }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}_SUSFS"
         run: |
           ls -al
 
@@ -296,7 +346,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: ${{ env.useAnykernel == 'true' }}
         with:
-          name: "${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}_${{ env.builddate }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}"
+          name: "${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}_${{ env.builddate }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}_SUSFS"
           path: AnyKernel3/*
 
       - name: 🧧 Create GitHub Release => (${{ env.builddate }})
@@ -304,13 +354,13 @@ jobs:
         uses: softprops/action-gh-release@v2.1.0
         if: ${{ env.useAnykernel == 'true' && env.release == 'true' }}
         with:
-          tag_name: v${{ env.builddate }}.${{ github.run_number }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}
-          name: v${{ env.builddate }}.${{ github.run_number }} (KernelSU Next ${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }})
+          tag_name: v${{ env.builddate }}.${{ github.run_number }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}_SUSFS
+          name: v${{ env.builddate }}.${{ github.run_number }} (KernelSU Next ${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }} + SUSFS)
           make_latest: true
           prerelease: false
           draft: false
           generate_release_notes: false
-          body: "Linux kernel patched with KernelSU Next ${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }} for Xiaomi Mi Note 10 Lite (toco).\n\n**Installation:**\n1. Flash the kernel from this release.\n2. Download and install the KernelSU Next manager APK from here: https://github.com/rifsxd/KernelSU-Next/releases/${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}"
-          files: "${{ env.WORKSPACE }}/${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}_${{ env.builddate }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}.zip"
+          body: "Linux kernel patched with [KernelSU Next](https://github.com/rifsxd/KernelSU-Next) ${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }} + [SUSFS patches](https://gitlab.com/simonpunk/susfs4ksu) for Xiaomi Mi Note 10 Lite (toco).\n\n**Installation:**\n1. Flash the kernel from this release.\n2. Download and install the KernelSU Next manager APK from here: https://github.com/rifsxd/KernelSU-Next/releases/${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}"
+          files: "${{ env.WORKSPACE }}/${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}_${{ env.builddate }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}_SUSFS.zip"
           fail_on_unmatched_files: true
           preserve_order: true

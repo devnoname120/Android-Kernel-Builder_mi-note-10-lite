@@ -8,6 +8,7 @@
       "defconfig": "toco_defconfig"
     },
     "withKernelSU": true,
+    "withSUSFS": true,
     "toolchains": [
       {
         "repo": "https://gitlab.com/PixelOS-Devices/playgroundtc",
@@ -33,7 +34,8 @@
         "STRIP": "clang-playground/bin/llvm-strip",
         "LDGOLD": "clang-playground/bin/aarch64-linux-gnu-ld.gold",
         "LLVM_AR": "clang-playground/bin/llvm-ar",
-        "LLVM_DIS": "clang-playground/bin/llvm-dis"
+        "LLVM_DIS": "clang-playground/bin/llvm-dis",
+        "EXTRAVERSION": "-perf"
       }
     },
     "AnyKernel3": {
