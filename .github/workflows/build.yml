@@ -103,6 +103,7 @@ jobs:
       - name: "🌟 Clone kernel source => (${{ env.KERNEL_REPO }})"
         run: |
           git clone --recursive --depth=1 -j $(nproc) --branch $KERNEL_BRANCH $KERNEL_REPO $KERNEL_NAME
+          echo -e "\n⚠️ Kernel is at commit: $(git -C $KERNEL_NAME rev-parse HEAD)\n"
 
           echo "🤔 Clone kernel source => ($KERNEL_REPO)"
 
