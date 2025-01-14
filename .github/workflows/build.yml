@@ -240,22 +240,20 @@ jobs:
             rm -rf "./SUSFS"
           fi
 
-          SUSFS_KERNEL_VERSION=4.14
-          SUSFS_BRANCH=kernel-$SUSFS_KERNEL_VERSION
+          SUSFS_BRANCH=kernel-4.14
 
-          git clone --recursive -j $(nproc) --branch $SUSFS_BRANCH https://gitlab.com/simonpunk/susfs4ksu.git SUSFS
+          git clone --recursive -j $(nproc) --branch $SUSFS_BRANCH https://github.com/devnoname120/susfs4ksu-toco SUSFS
 
           SUSFS_REF=$(git -C SUSFS rev-parse --short HEAD)
           echo -e "SUSFS_REF=$SUSFS_REF" >> $GITHUB_OUTPUT
           echo -e "SUSFS_BRANCH=$SUSFS_BRANCH" >> $GITHUB_OUTPUT
 
 
-
           cp SUSFS/kernel_patches/fs/* fs/
           cp SUSFS/kernel_patches/include/linux/* include/linux/
 
           patch -d KernelSU-Next -p1 < SUSFS/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch
-          patch -p1 < SUSFS/kernel_patches/50_add_susfs_in_kernel-$KERN_VER.patch
+          patch -p1 < SUSFS/kernel_patches/50_add_susfs_in_kernel-4.14.patch
 
           echo -e "CONFIG_KSU_SUSFS=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
           echo -e "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
