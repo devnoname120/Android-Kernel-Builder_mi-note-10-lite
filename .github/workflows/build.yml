@@ -274,6 +274,44 @@ jobs:
 
           cat arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
 
+      - name: "🥷 Build ksu_susfs userspace tool"
+        id: build-ksu_susfs-userspace-tool
+        working-directory: ${{ env.KERNEL_NAME }}/SUSFS
+        env:
+          arch: ${{ steps.generate-args.outputs.ARCH }}
+        if: ${{ env.withKernelSU == 'true' && env.withSUSFS == 'true' }}
+        run: |
+          ./build_ksu_susfs_tool.sh
+
+      - name: "💙 Upload ksu_susfs userspace tool"
+        uses: actions/upload-artifact@v4
+        env:
+          arch: ${{ steps.generate-args.outputs.ARCH }}
+        with:
+          name: ksu_susfs_arm64
+          path: ${{ env.KERNEL_NAME }}/SUSFS/ksu_module_susfs/tools/ksu_susfs_arm64
+          if-no-files-found: ignore
+          retention-days: 90
+
+      - name: "🥷 Build susfs4ksu module"
+        id: build-susfs4ksu-module
+        working-directory: ${{ env.KERNEL_NAME }}/SUSFS
+        env:
+          arch: ${{ steps.generate-args.outputs.ARCH }}
+        if: ${{ env.withKernelSU == 'true' && env.withSUSFS == 'true' }}
+        run: |
+          ./build_ksu_module.sh
+
+      - name: "💙 Upload susfs4ksu module"
+        uses: actions/upload-artifact@v4
+        env:
+          arch: ${{ steps.generate-args.outputs.ARCH }}
+        with:
+          name: ksu_module_susfs.zip
+          path: ${{ env.KERNEL_NAME }}/SUSFS/ksu_module_susfs.zip
+          if-no-files-found: ignore
+          retention-days: 90
+
       - name: "👍 Make defconfig"
         working-directory: ${{ env.KERNEL_NAME }}
         env:
