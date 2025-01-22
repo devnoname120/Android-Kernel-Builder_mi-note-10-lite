@@ -211,7 +211,7 @@ jobs:
             rm -rf "./drivers/kernelsu"
           fi
 
-          curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -
+          curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next
 
           KERNELSU_NEXT_VERSION=$(git -C KernelSU-Next describe --abbrev=0 --tags)
 
