@@ -275,7 +275,7 @@ jobs:
           echo -e "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
           echo -e "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
           echo -e "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
-          echo -e "CONFIG_KSU_SUSFS_SUS_SU=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e "CONFIG_KSU_SUSFS_SUS_SU=n" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
 
           cat arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
 
