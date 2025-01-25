@@ -267,59 +267,6 @@ jobs:
 
           cat arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
 
-      # **Only** needed to build ksu_susfs userspace tool
-      # It's NOT needed to build the kernel with or without the KernelSU Next patches
-      - uses: nttld/setup-ndk@ba255cfe086fe76c82c0aff3c43560cdeb105f99 # v1
-        id: setup-ndk
-        if: ${{ env.withKernelSU == 'true' && env.withSUSFS == 'true' }}
-        with:
-          ndk-version: r27c
-          add-to-path: false
-
-      - name: "🥷 Build ksu_susfs userspace tool"
-        id: build-ksu_susfs-userspace-tool
-        if: ${{ env.withKernelSU == 'true' && env.withSUSFS == 'true' }}
-        working-directory: ${{ env.KERNEL_NAME }}/SUSFS
-        run: |
-          export PATH="$ANDROID_NDK_HOME:$PATH"
-          ./build_ksu_susfs_tool.sh
-        env:
-          arch: ${{ steps.generate-args.outputs.ARCH }}
-          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
-
-      - name: "💙 Upload ksu_susfs userspace tool"
-        uses: actions/upload-artifact@v4
-        if: ${{ env.withKernelSU == 'true' && env.withSUSFS == 'true' }}
-        env:
-          arch: ${{ steps.generate-args.outputs.ARCH }}
-        with:
-          name: ksu_susfs_arm64
-          path: ${{ env.KERNEL_NAME }}/SUSFS/ksu_module_susfs/tools/ksu_susfs_arm64
-          if-no-files-found: ignore
-          retention-days: 90
-
-      - name: "🥷 Build susfs4ksu module"
-        id: build-susfs4ksu-module
-        if: ${{ env.withKernelSU == 'true' && env.withSUSFS == 'true' }}
-        working-directory: ${{ env.KERNEL_NAME }}/SUSFS
-        run: |
-          export PATH="$ANDROID_NDK_HOME:$PATH"
-          ./build_ksu_module.sh
-        env:
-          arch: ${{ steps.generate-args.outputs.ARCH }}
-          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
-
-      - name: "💙 Upload susfs4ksu module"
-        if: ${{ env.withKernelSU == 'true' && env.withSUSFS == 'true' }}
-        uses: actions/upload-artifact@v4
-        env:
-          arch: ${{ steps.generate-args.outputs.ARCH }}
-        with:
-          name: ksu_module_susfs.zip
-          path: ${{ env.KERNEL_NAME }}/SUSFS/ksu_module_susfs.zip
-          if-no-files-found: ignore
-          retention-days: 90
-
       - name: "👍 Make defconfig"
         working-directory: ${{ env.KERNEL_NAME }}
         env:
