@@ -17,7 +17,6 @@
         "binPath": ["./bin"]
       }
     ],
-    "ccache": true,
     "params": {
       "ARCH": "arm64",
       "CC": "clang-playground/bin/clang",
