@@ -11,7 +11,7 @@
     "withSUSFS": true,
     "toolchains": [
       {
-        "repo": "https://gitlab.com/PixelOS-Devices/playgroundtc",
+        "repo": "https://github.com/devnoname120/pixelos-playgroundtc",
         "branch": "17",
         "name": "clang-playground",
         "binPath": ["./bin"]
@@ -40,7 +40,7 @@
     "AnyKernel3": {
       "use": true,
       "release": true,
-      "repo": "https://github.com/AndroidHQ254/AnyKernel3/",
+      "repo": "https://github.com/devnoname120/AnyKernel3/",
       "branch": "toco"
     }
   }
