@@ -177,7 +177,7 @@ jobs:
             rm -rf "./drivers/kernelsu"
           fi
 
-          curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next
+          curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next-susfs
 
           KERNELSU_NEXT_VERSION=$(git -C KernelSU-Next describe --abbrev=0 --tags)
           echo -e "KERNELSU_NEXT_VERSION=$KERNELSU_NEXT_VERSION" >> $GITHUB_OUTPUT
@@ -220,7 +220,9 @@ jobs:
           cp SUSFS/kernel_patches/fs/* fs/
           cp SUSFS/kernel_patches/include/linux/* include/linux/
 
-          patch -d KernelSU-Next -p1 --verbose < SUSFS/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch
+          # Branch `next-susfs` of KernelSU-Next now has the SUSFS patches already applied so we don't need this line anymore (for now at least)
+          # patch -d KernelSU-Next -p1 --verbose < SUSFS/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch
+
           patch -p1 --verbose < SUSFS/kernel_patches/40_ksu_without_kprobes.patch
           patch -p1 --verbose < SUSFS/kernel_patches/50_add_susfs_in_kernel-4.14.patch
 
