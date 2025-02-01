@@ -20,12 +20,12 @@ jobs:
       - name: "😆 Generate Matrix"
         id: generate-matrix
         run: |
-          echo "repos<<EOF" >> $GITHUB_OUTPUT
-          jq -s '[.[][]]' repos/repos*.json >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "repos<<EOF" >> ${GITHUB_OUTPUT}
+          jq -s '[.[][]]' repos/repos*.json >> ${GITHUB_OUTPUT}
+          echo "EOF" >> ${GITHUB_OUTPUT}
       - name: "⏰ Set builddate"
         id: generate-builddate
-        run: echo "builddate=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+        run: echo "builddate=$(date +'%Y%m%d')" >> ${GITHUB_OUTPUT}
 
   Build-Kernel:
     name: "🐎 Build kernel"
@@ -65,62 +65,62 @@ jobs:
         env:
           params: "${{ toJSON(matrix.repos.AnyKernel3) }}"
         run: |
-          ANYKERNEL_REPO=$(echo $params | jq -r ".repo")
-          ANYKERNEL_BRANCH=$(echo $params | jq -r ".branch")
-          git clone --recursive --depth=1 -j $(nproc) --branch $ANYKERNEL_BRANCH $ANYKERNEL_REPO AnyKernel3
+          ANYKERNEL_REPO=$(echo ${params} | jq -r ".repo")
+          ANYKERNEL_BRANCH=$(echo ${params} | jq -r ".branch")
+          git clone --recursive --depth=1 -j $(nproc) --branch ${ANYKERNEL_BRANCH} ${ANYKERNEL_REPO} AnyKernel3
 
-          echo "🤔 Setup Anykernel3 => ($ANYKERNEL_REPO)"
+          echo "🤔 Setup Anykernel3 => (${ANYKERNEL_REPO})"
 
       - name: "🌟 Clone kernel source => (${{ env.KERNEL_REPO }})"
         run: |
-          git clone --recursive --depth=1 -j $(nproc) --branch $KERNEL_BRANCH $KERNEL_REPO $KERNEL_NAME
-          echo -e "\n⚠️ Kernel is at commit: $(git -C $KERNEL_NAME rev-parse HEAD)\n"
+          git clone --recursive --depth=1 -j $(nproc) --branch ${KERNEL_BRANCH} ${KERNEL_REPO} ${KERNEL_NAME}
+          echo -e "\n⚠️ Kernel is at commit: $(git -C ${KERNEL_NAME} rev-parse HEAD)\n"
 
-          echo "🤔 Clone kernel source => ($KERNEL_REPO)"
+          echo "🤔 Clone kernel source => (${KERNEL_REPO})"
 
       - name: "💫 Get toolchains"
         env:
           toolchains: "${{ toJSON(matrix.repos.toolchains) }}"
         run: |
-          toolchains_num="$(echo $toolchains | jq 'length')"
-          echo "🤔 There is $toolchains_num defined toolchains."
+          toolchains_num="$(echo ${toolchains} | jq 'length')"
+          echo "🤔 There is ${toolchains_num} defined toolchains."
           for ((i=0;i<toolchains_num;i++)); do
-            toolchain_name=$(echo $toolchains | jq -r ".[$i].name")
+            toolchain_name=$(echo ${toolchains} | jq -r ".[${i}].name")
             # Github
-            toolchain_repo=$(echo $toolchains | jq -r ".[$i].repo")
-            toolchain_branch=$(echo $toolchains | jq -r ".[$i].branch")
+            toolchain_repo=$(echo ${toolchains} | jq -r ".[${i}].repo")
+            toolchain_branch=$(echo ${toolchains} | jq -r ".[${i}].branch")
             # From archive
-            toolchain_url=$(echo $toolchains | jq -r ".[$i].url")
+            toolchain_url=$(echo ${toolchains} | jq -r ".[${i}].url")
 
-            echo $toolchain_url
-            if [ -z "${toolchain_url:-}" ] || [ "$toolchain_url" = "null" ];  then
-              git clone --recursive --depth=1 -j $(nproc) --branch $toolchain_branch $toolchain_repo $toolchain_name
-              echo "🤔 Clone $toolchain_name => ($toolchain_repo)"
+            echo ${toolchain_url}
+            if [ -z "${toolchain_url:-}" ] || [ "${toolchain_url}" = "null" ];  then
+              git clone --recursive --depth=1 -j $(nproc) --branch ${toolchain_branch} ${toolchain_repo} ${toolchain_name}
+              echo "🤔 Clone ${toolchain_name} => (${toolchain_repo})"
             else
-              wget "$toolchain_url"
+              wget "${toolchain_url}"
               filename="${toolchain_url##*/}"
-              mkdir -p $toolchain_name
-              case "$filename" in
+              mkdir -p ${toolchain_name}
+              case "${filename}" in
                 *.zip)
-                  unzip -d $toolchain_name "$filename"
+                  unzip -d ${toolchain_name} "${filename}"
                   ;;
                 *.tar)
-                  tar xvf "$filename" -C $toolchain_name
+                  tar xvf "${filename}" -C ${toolchain_name}
                   ;;
                 *.tar.gz)
-                  tar zxvf "$filename" -C $toolchain_name
+                  tar zxvf "${filename}" -C ${toolchain_name}
                   ;;
                 *.rar)
-                  unrar x "$filename" $toolchain_name
+                  unrar x "${filename}" ${toolchain_name}
                   ;;
                 *)
-                  echo "unknown file type: $filename"
+                  echo "unknown file type: ${filename}"
                   ;;
               esac
             fi
 
-            jq -r ".[$i].binPath[] | tostring" <<< "$toolchains" | while read -r bin_path; do
-              echo "$WORKSPACE/$toolchain_name/$bin_path" >> $GITHUB_PATH
+            jq -r ".[${i}].binPath[] | tostring" <<< "${toolchains}" | while read -r bin_path; do
+              echo "${WORKSPACE}/${toolchain_name}/${bin_path}" >> ${GITHUB_PATH}
             done
           done
 
@@ -128,40 +128,39 @@ jobs:
         id: generate-args
         env:
           params: "${{ toJSON(matrix.repos.params) }}"
-          THREAD: $(nproc --all)
         run: |
-          echo "🤔 PATH Variable: $PATH"
+          echo "🤔 PATH Variable: ${PATH}"
 
-          ARCH=$(echo $params | jq -r ".ARCH")
-          CC=$(echo $params | jq -r ".CC")
+          ARCH=$(echo ${params} | jq -r ".ARCH")
+          CC=$(echo ${params} | jq -r ".CC")
 
-          args="-j${{ env.THREAD }}"
+          args="-j$(nproc --all)"
           if [ -n "${{ env.OUT_DIR }}" ]; then
-            mkdir -p ${{ env.OUT_DIR }} && args="$args O=${{ env.OUT_DIR }}"
+            mkdir -p ${{ env.OUT_DIR }} && args="${args} O=${{ env.OUT_DIR }}"
           fi
-          if [ -n "$ARCH" ]; then
-            args="$args ARCH=$ARCH"
+          if [ -n "${ARCH}" ]; then
+            args="${args} ARCH=${ARCH}"
           fi
-          if [ -n "$CC" ]; then
+          if [ -n "${CC}" ]; then
 
-            if [[ "$CC" == *"/"* ]]; then
-              CC=${{ env.WORKSPACE }}/$CC
+            if [[ "${CC}" == *"/"* ]]; then
+              CC=${{ env.WORKSPACE }}/${CC}
             fi
 
-            args="$args CC=$CC"
+            args="${args} CC=${CC}"
           fi
           while read -r externalCommand; do
-            key=$(echo "$externalCommand" | cut -d= -f1)
-            value=$(echo "$externalCommand" | cut -d= -f2)
-            if [[ "$value" == *"/"* ]]; then
-              value="${{ env.WORKSPACE }}/$value"
+            key=$(echo "${externalCommand}" | cut -d= -f1)
+            value=$(echo "${externalCommand}" | cut -d= -f2)
+            if [[ "${value}" == *"/"* ]]; then
+              value="${{ env.WORKSPACE }}/${value}"
             fi
-            args="$args $key=$value"
-          done < <(jq -r '.externalCommand | to_entries[] | "\(.key)=\(.value)"' <<< "$params")
+            args="${args} ${key}=${value}"
+          done < <(jq -r '.externalCommand | to_entries[] | "\(.key)=\(.value)"' <<< "${params}")
 
-          echo "🤔 $args"
-          echo "ARCH=$ARCH" >> $GITHUB_OUTPUT
-          echo "args=$args" >> $GITHUB_OUTPUT
+          echo "🤔 ${args}"
+          echo "ARCH=${ARCH}" >> ${GITHUB_OUTPUT}
+          echo "args=${args}" >> ${GITHUB_OUTPUT}
 
       - name: "😋 Integrate KernelSU Next"
         id: integrate-kernelsu-next
@@ -177,11 +176,16 @@ jobs:
             rm -rf "./drivers/kernelsu"
           fi
 
-          curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next-susfs
+          branch=next
+          if [ "${withSUSFS}" = "true" ]; then
+            branch=next-susfs
+          fi
+
+          curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s ${branch}
 
           KERNELSU_NEXT_VERSION=$(git -C KernelSU-Next describe --abbrev=0 --tags)
-          echo -e "KERNELSU_NEXT_VERSION=$KERNELSU_NEXT_VERSION" >> $GITHUB_OUTPUT
-          echo -e "\n💡 KernelSU Next version: $KERNELSU_NEXT_VERSION\n"
+          echo -e "KERNELSU_NEXT_VERSION=${KERNELSU_NEXT_VERSION}" >> ${GITHUB_OUTPUT}
+          echo -e "\n💡 KernelSU Next version: ${KERNELSU_NEXT_VERSION}\n"
 
           echo -e "CONFIG_KPROBES=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
           echo -e "CONFIG_HAVE_KPROBES=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
@@ -206,16 +210,16 @@ jobs:
           fi
 
           SUSFS_BRANCH=kernel-4.14
-          echo -e "SUSFS_BRANCH=$SUSFS_BRANCH" >> $GITHUB_OUTPUT
+          echo -e "SUSFS_BRANCH=${SUSFS_BRANCH}" >> ${GITHUB_OUTPUT}
 
-          git clone --recursive -j $(nproc) --branch $SUSFS_BRANCH https://github.com/devnoname120/susfs4ksu-toco SUSFS
+          git clone --recursive -j $(nproc) --branch ${SUSFS_BRANCH} https://github.com/devnoname120/susfs4ksu-toco SUSFS
 
           SUSFS_VERSION=$(grep -oP '^\s*#define\s+SUSFS_VERSION\s+"\K[^"]+' SUSFS/kernel_patches/include/linux/susfs.h)
-          echo -e "SUSFS_VERSION=$SUSFS_VERSION" >> $GITHUB_OUTPUT
-          echo -e "\n💡 SUSFS version: $SUSFS_VERSION\n"
+          echo -e "SUSFS_VERSION=${SUSFS_VERSION}" >> ${GITHUB_OUTPUT}
+          echo -e "\n💡 SUSFS version: ${SUSFS_VERSION}\n"
 
           SUSFS_REF=$(git -C SUSFS rev-parse --short HEAD)
-          echo -e "SUSFS_REF=$SUSFS_REF" >> $GITHUB_OUTPUT
+          echo -e "SUSFS_REF=${SUSFS_REF}" >> ${GITHUB_OUTPUT}
 
           cp SUSFS/kernel_patches/fs/* fs/
           cp SUSFS/kernel_patches/include/linux/* include/linux/
@@ -256,15 +260,68 @@ jobs:
           args: ${{ steps.generate-args.outputs.args }}
           arch: ${{ steps.generate-args.outputs.ARCH }}
         run: |
-          echo "PATH Variable: $PATH"
+          echo "PATH Variable: ${PATH}"
           make ${{ env.args }} ${{ env.DEFCONFIG_NAME }}
 
-      - name: "💛 Upload final kernel source tarball"
+      - name: "Define output artifact names"
+        id: define-output-names
+        env:
+          run_number: ${{ github.run_number }}
+          KERNELSU_NEXT_VERSION: ${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}
+          SUSFS_VERSION: ${{ steps.add-susfs-patches.outputs.SUSFS_VERSION }}
+        run: |
+          release_name="[${builddate}.${run_number}]"
+
+          prefix="${KERNEL_DEVICE}-${KERNEL_NAME}-${builddate}"
+          suffix=
+
+          if [ "${withKernelSU}" != "true" ] && [ "${withSUSFS}" != "true" ]; then
+            release_name="${release_name} Normal kernel (untouched)"
+            release_description="Untouched Linux kernel for Xiaomi Mi Note 10 Lite (toco). This release does **NOT** have KernelSU Next or SUSFS.\n\n**Installation:**\n1. Flash the kernel from this release from the [OrangeFox](https://github.com/AndroidHQ254/Action-OFRP-Builder/releases) recovery.\n2.Done."
+          fi
+
+          if [ "${withKernelSU}" = "true" ]; then
+            suffix="${suffix}_KernelSU-Next-${KERNELSU_NEXT_VERSION}"
+
+            release_name="${release_name} KernelSU Next ${KERNELSU_NEXT_VERSION}"
+            release_description="Linux kernel for Xiaomi Mi Note 10 Lite (toco) patched with [KernelSU Next ${KERNELSU_NEXT_VERSION}](https://github.com/rifsxd/KernelSU-Next).\n\n**Installation:**\n1. Flash the kernel from this release from the [OrangeFox](https://github.com/AndroidHQ254/Action-OFRP-Builder/releases) recovery.\n2. Download and install the [latest KernelSU Next manager APK](https://github.com/rifsxd/KernelSU-Next/releases/${KERNELSU_NEXT_VERSION})."
+          fi
+
+          if [ "${withSUSFS}" = "true" ]; then
+            suffix="${suffix}_SUSFS-${SUSFS_VERSION}"
+
+            release_name="${release_name} + SUSFS ${SUSFS_VERSION}"
+            release_description="Linux kernel for Xiaomi Mi Note 10 Lite (toco) patched with [KernelSU Next ${KERNELSU_NEXT_VERSION}](https://github.com/rifsxd/KernelSU-Next) + [SUSFS ${SUSFS_VERSION}](https://gitlab.com/simonpunk/susfs4ksu/-/tree/kernel-4.14).\n\n**Installation:**\n1. Flash the kernel from this release from the [OrangeFox](https://github.com/AndroidHQ254/Action-OFRP-Builder/releases) recovery.\n2. Download and install the [latest KernelSU Next manager APK](https://github.com/rifsxd/KernelSU-Next/releases/${KERNELSU_NEXT_VERSION}). \n3. Install the latest [susfs4ksu-module](https://github.com/sidex15/susfs4ksu-module/releases) in KernelSU Next."
+          fi
+
+
+          kernel_final_source_tarball="kernel-final-source-tarball.gz-${prefix}${suffix}"
+          image_gz="Image.gz-${prefix}${suffix}"
+          dtb="dtb-${prefix}${suffix}"
+          dtbo_img="dtbo.img-${prefix}${suffix}"
+          anykernel3="${prefix}${suffix}"
+
+          release_zip="${anykernel3}.zip"
+          release_tag="${builddate}.${run_number}${suffix}"
+
+          echo "kernel_final_source_tarball=${kernel_final_source_tarball}" >> "${GITHUB_OUTPUT}"
+          echo "image_gz=${image_gz}" >> "${GITHUB_OUTPUT}"
+          echo "dtb=${dtb}" >> "${GITHUB_OUTPUT}"
+          echo "dtbo_img=${dtbo_img}" >> "${GITHUB_OUTPUT}"
+          echo "anykernel3=${anykernel3}" >> "${GITHUB_OUTPUT}"
+
+          echo "release_name=${release_name}" >> "${GITHUB_OUTPUT}"
+          echo "release_description=${release_description}" >> "${GITHUB_OUTPUT}"
+          echo "release_zip=${release_zip}" >> "${GITHUB_OUTPUT}"
+          echo "release_tag=${release_tag}" >> "${GITHUB_OUTPUT}"
+
+
+      - name: "💛 Upload kernel source tarball before build"
         uses: actions/upload-artifact@v4
         env:
           arch: ${{ steps.generate-args.outputs.ARCH }}
         with:
-          name: kernel-final-source-tarball.gz-${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}-${{ env.builddate }}_KernelSU-Next-${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}_SUSFS-${{ steps.add-susfs-patches.outputs.SUSFS_VERSION }}
+          name: ${{ steps.define-output-names.outputs.kernel_final_source_tarball }}
           path: ${{ env.KERNEL_NAME }}
           if-no-files-found: ignore
           retention-days: 90
@@ -274,8 +331,10 @@ jobs:
         env:
           args: ${{ steps.generate-args.outputs.args }}
         run: |
-          echo "PATH Variable: $PATH"
+          echo "PATH Variable: ${PATH}"
           make ${{ env.args }}
+
+
 
       #- name: "💛 Upload Image"
       #  uses: actions/upload-artifact@v3
@@ -292,7 +351,7 @@ jobs:
         env:
           arch: ${{ steps.generate-args.outputs.ARCH }}
         with:
-          name: Image.gz-${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}-${{ env.builddate }}_KernelSU-Next-${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}_SUSFS-${{ steps.add-susfs-patches.outputs.SUSFS_VERSION }}
+          name: ${{ steps.define-output-names.outputs.image_gz }}
           path: ${{ env.OUT_DIR }}/arch/${{ env.arch }}/boot/Image.gz
           if-no-files-found: ignore
           retention-days: 90
@@ -302,7 +361,7 @@ jobs:
         env:
           arch: ${{ steps.generate-args.outputs.ARCH }}
         with:
-          name: dtb-${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}-${{ env.builddate }}_KernelSU-Next-${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}_SUSFS-${{ steps.add-susfs-patches.outputs.SUSFS_VERSION }}
+          name: ${{ steps.define-output-names.outputs.dtb }}
           path: ${{ env.OUT_DIR }}/arch/${{ env.arch }}/boot/dtb
           if-no-files-found: ignore
           retention-days: 90
@@ -312,7 +371,7 @@ jobs:
         env:
           arch: ${{ steps.generate-args.outputs.ARCH }}
         with:
-          name: dtbo.img-${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}-${{ env.builddate }}_KernelSU-Next-${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}_SUSFS-${{ steps.add-susfs-patches.outputs.SUSFS_VERSION }}
+          name: ${{ steps.define-output-names.outputs.dtbo_img}}
           path: ${{ env.OUT_DIR }}/arch/${{ env.arch }}/boot/dtbo.img
           if-no-files-found: ignore
           retention-days: 90
@@ -321,7 +380,7 @@ jobs:
         if: ${{ env.useAnykernel == 'true' }}
         env:
           arch: ${{ steps.generate-args.outputs.ARCH }}
-          anykernel: "${{ env.WORKSPACE }}/${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}_${{ env.builddate }}_KernelSU-Next-${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}_SUSFS-${{ steps.add-susfs-patches.outputs.SUSFS_VERSION }}"
+          anykernel: "${{ env.WORKSPACE }}/${{ steps.define-output-names.outputs.anykernel3 }}"
         run: |
           ls -al
 
@@ -342,7 +401,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: ${{ env.useAnykernel == 'true' }}
         with:
-          name: "${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}_${{ env.builddate }}_KernelSU-Next-${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}_SUSFS-${{ steps.add-susfs-patches.outputs.SUSFS_VERSION }}"
+          name: "${{ steps.define-output-names.outputs.anykernel3 }}"
           path: AnyKernel3/*
 
       - name: 🧧 Create GitHub Release => (${{ env.builddate }})
@@ -350,13 +409,13 @@ jobs:
         uses: softprops/action-gh-release@v2.1.0
         if: ${{ env.useAnykernel == 'true' && env.release == 'true' }}
         with:
-          tag_name: ${{ env.builddate }}.${{ github.run_number }}_KernelSU-Next_${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}_SUSFS_${{ steps.add-susfs-patches.outputs.SUSFS_VERSION }}
-          name: "[${{ env.builddate }}.${{ github.run_number }}] KernelSU Next ${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }} + SUSFS ${{ steps.add-susfs-patches.outputs.SUSFS_VERSION }}"
-          make_latest: true
+          tag_name: ${{ steps.define-output-names.outputs.release_tag }}
+          name: ${{ steps.define-output-names.outputs.release_name }}
+          make_latest: ${{ env.withKernelSU == 'true' && env.withSUSFS == 'true' }}
           prerelease: false
           draft: false
           generate_release_notes: false
-          body: "Linux kernel for Xiaomi Mi Note 10 Lite (toco) patched with [KernelSU Next ${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}](https://github.com/rifsxd/KernelSU-Next) + [SUSFS ${{ steps.add-susfs-patches.outputs.SUSFS_VERSION }}](https://gitlab.com/simonpunk/susfs4ksu/-/tree/kernel-4.14).\n\n**Installation:**\n1. Flash the kernel from this release from the recovery.\n2. Download and install the [latest KernelSU Next manager APK](https://github.com/rifsxd/KernelSU-Next/releases/${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}). \n3. Install the latest [susfs4ksu-module](https://github.com/sidex15/susfs4ksu-module/releases) in KernelSU Next."
-          files: "${{ env.WORKSPACE }}/${{ env.KERNEL_DEVICE }}-${{ env.KERNEL_NAME }}_${{ env.builddate }}_KernelSU-Next-${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}_SUSFS-${{ steps.add-susfs-patches.outputs.SUSFS_VERSION }}.zip"
+          body: ${{ steps.define-output-names.outputs.release_description }}
+          files: "${{ env.WORKSPACE }}/${{ steps.define-output-names.outputs.release_zip }}"
           fail_on_unmatched_files: true
           preserve_order: true
