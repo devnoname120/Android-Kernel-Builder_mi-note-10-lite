@@ -7,8 +7,8 @@
       "device": "toco",
       "defconfig": "toco_defconfig"
     },
-    "withKernelSU": true,
-    "withSUSFS": true,
+    "withKernelSU": false,
+    "withSUSFS": false,
     "toolchains": [
       {
         "repo": "https://github.com/devnoname120/pixelos-playgroundtc",
@@ -54,6 +54,51 @@
     },
     "withKernelSU": true,
     "withSUSFS": false,
+    "toolchains": [
+      {
+        "repo": "https://github.com/devnoname120/pixelos-playgroundtc",
+        "branch": "17",
+        "name": "clang-playground",
+        "binPath": ["./bin"]
+      }
+    ],
+    "params": {
+      "ARCH": "arm64",
+      "CC": "clang-playground/bin/clang",
+      "externalCommand": {
+        "CROSS_COMPILE": "clang-playground/bin/aarch64-linux-gnu-",
+        "CROSS_COMPILE_ARM32": "clang-playground/bin/arm-linux-gnueabi-",
+        "LD": "clang-playground/bin/ld.lld",
+        "AR": "clang-playground/bin/llvm-ar",
+        "NM": "clang-playground/bin/llvm-nm",
+        "OBJCOPY": "clang-playground/bin/llvm-objcopy",
+        "OBJDUMP": "clang-playground/bin/llvm-objdump",
+        "READELF": "clang-playground/bin/llvm-readelf",
+        "OBJSIZE": "clang-playground/bin/llvm-size",
+        "STRIP": "clang-playground/bin/llvm-strip",
+        "LDGOLD": "clang-playground/bin/aarch64-linux-gnu-ld.gold",
+        "LLVM_AR": "clang-playground/bin/llvm-ar",
+        "LLVM_DIS": "clang-playground/bin/llvm-dis",
+        "EXTRAVERSION": "-perf"
+      }
+    },
+    "AnyKernel3": {
+      "use": true,
+      "release": true,
+      "repo": "https://github.com/devnoname120/AnyKernel3/",
+      "branch": "toco"
+    }
+  },
+  {
+    "kernelSource": {
+      "name": "VantomKernel",
+      "repo": "https://github.com/devnoname120/kernel_xiaomi_sm6150",
+      "branch": "fifteen",
+      "device": "toco",
+      "defconfig": "toco_defconfig"
+    },
+    "withKernelSU": true,
+    "withSUSFS": true,
     "toolchains": [
       {
         "repo": "https://github.com/devnoname120/pixelos-playgroundtc",
