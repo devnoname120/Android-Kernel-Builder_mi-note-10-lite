@@ -311,9 +311,12 @@ jobs:
           echo "anykernel3=${anykernel3}" >> "${GITHUB_OUTPUT}"
 
           echo "release_name=${release_name}" >> "${GITHUB_OUTPUT}"
-          echo "release_description=${release_description}" >> "${GITHUB_OUTPUT}"
           echo "release_zip=${release_zip}" >> "${GITHUB_OUTPUT}"
           echo "release_tag=${release_tag}" >> "${GITHUB_OUTPUT}"
+
+          echo "release_description<<EOF" >> "${GITHUB_OUTPUT}"
+          echo -e "${release_description}" >> "${GITHUB_OUTPUT}"
+          echo "EOF" >> "${GITHUB_OUTPUT}"
 
 
       - name: "💛 Upload kernel source tarball before build"
