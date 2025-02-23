@@ -72,9 +72,12 @@ jobs:
           echo "🤔 Setup Anykernel3 => (${ANYKERNEL_REPO})"
 
       - name: "🌟 Clone kernel source => (${{ env.KERNEL_REPO }})"
+        id: clone-kernel
         run: |
           git clone --recursive --depth=1 -j $(nproc) --branch ${KERNEL_BRANCH} ${KERNEL_REPO} ${KERNEL_NAME}
-          echo -e "\n⚠️ Kernel is at commit: $(git -C ${KERNEL_NAME} rev-parse HEAD)\n"
+          KERNEL_GIT_REF=$(git -C ${KERNEL_NAME} rev-parse --short HEAD)
+          echo "KERNEL_GIT_REF=${KERNEL_GIT_REF}" >> ${GITHUB_OUTPUT}
+          echo -e "\n⚠️ Kernel is at commit: ${KERNEL_GIT_REF}\n"
 
           echo "🤔 Clone kernel source => (${KERNEL_REPO})"
 
@@ -184,8 +187,11 @@ jobs:
           curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s ${branch}
 
           KERNELSU_NEXT_VERSION=$(git -C KernelSU-Next describe --abbrev=0 --tags)
-          echo -e "KERNELSU_NEXT_VERSION=${KERNELSU_NEXT_VERSION}" >> ${GITHUB_OUTPUT}
+          KERNELSU_NEXT_GIT_REF=$(git -C KernelSU-Next rev-parse --short HEAD)
+          echo "KERNELSU_NEXT_VERSION=${KERNELSU_NEXT_VERSION}" >> ${GITHUB_OUTPUT}
+          echo "KERNELSU_NEXT_GIT_REF=${KERNELSU_NEXT_GIT_REF}" >> ${GITHUB_OUTPUT}
           echo -e "\n💡 KernelSU Next version: ${KERNELSU_NEXT_VERSION}\n"
+          echo -e "\n💡 KernelSU Next ref: ${KERNELSU_NEXT_GIT_REF}\n"
 
           echo -e "CONFIG_KPROBES=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
           echo -e "CONFIG_HAVE_KPROBES=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
@@ -218,8 +224,8 @@ jobs:
           echo -e "SUSFS_VERSION=${SUSFS_VERSION}" >> ${GITHUB_OUTPUT}
           echo -e "\n💡 SUSFS version: ${SUSFS_VERSION}\n"
 
-          SUSFS_REF=$(git -C SUSFS rev-parse --short HEAD)
-          echo -e "SUSFS_REF=${SUSFS_REF}" >> ${GITHUB_OUTPUT}
+          SUSFS_GIT_REF=$(git -C SUSFS rev-parse --short HEAD)
+          echo -e "SUSFS_GIT_REF=${SUSFS_GIT_REF}" >> ${GITHUB_OUTPUT}
 
           cp SUSFS/kernel_patches/fs/* fs/
           cp SUSFS/kernel_patches/include/linux/* include/linux/
@@ -267,8 +273,11 @@ jobs:
         id: define-output-names
         env:
           run_number: ${{ github.run_number }}
+          KERNEL_GIT_REF: ${{ steps.clone-kernel.outputs.KERNEL_GIT_REF}}
           KERNELSU_NEXT_VERSION: ${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_VERSION }}
+          KERNELSU_NEXT_GIT_REF: ${{ steps.integrate-kernelsu-next.outputs.KERNELSU_NEXT_GIT_REF }}
           SUSFS_VERSION: ${{ steps.add-susfs-patches.outputs.SUSFS_VERSION }}
+          SUSFS_GIT_REF: ${{ steps.add-susfs-patches.outputs.SUSFS_GIT_REF }}
         run: |
           release_name="[${builddate}.${run_number}]"
 
@@ -277,21 +286,21 @@ jobs:
 
           if [ "${withKernelSU}" != "true" ] && [ "${withSUSFS}" != "true" ]; then
             release_name="${release_name} Normal kernel (untouched)"
-            release_description="Untouched Linux kernel for Xiaomi Mi Note 10 Lite (toco). This release does **NOT** have KernelSU Next or SUSFS.\n\n**Installation:**\n1. Flash the kernel from this release from the [OrangeFox](https://github.com/AndroidHQ254/Action-OFRP-Builder/releases) recovery.\n2. Done."
+            release_description="Untouched Linux kernel for Xiaomi Mi Note 10 Lite (toco). This release does **NOT** have KernelSU Next or SUSFS.\n\nKernel git ref: [\`${KERNEL_GIT_REF}\`](${KERNEL_REPO}/commit/${KERNEL_GIT_REF})\n\n**Installation:**\n1. Flash the kernel from this release from the [OrangeFox](https://github.com/AndroidHQ254/Action-OFRP-Builder/releases) recovery.\n2. Done."
           fi
 
           if [ "${withKernelSU}" = "true" ]; then
             suffix="${suffix}_KernelSU-Next-${KERNELSU_NEXT_VERSION}"
 
             release_name="${release_name} KernelSU Next ${KERNELSU_NEXT_VERSION}"
-            release_description="Linux kernel for Xiaomi Mi Note 10 Lite (toco) patched with [KernelSU Next ${KERNELSU_NEXT_VERSION}](https://github.com/rifsxd/KernelSU-Next).\n\n**Installation:**\n1. Flash the kernel from this release from the [OrangeFox](https://github.com/AndroidHQ254/Action-OFRP-Builder/releases) recovery.\n2. Download and install the [latest KernelSU Next manager APK](https://github.com/rifsxd/KernelSU-Next/releases/${KERNELSU_NEXT_VERSION})."
+            release_description="Linux kernel for Xiaomi Mi Note 10 Lite (toco) patched with [KernelSU Next ${KERNELSU_NEXT_VERSION}](https://github.com/rifsxd/KernelSU-Next).\n\n- Kernel git ref: [\`${KERNEL_GIT_REF}\`](${KERNEL_REPO}/commit/${KERNEL_GIT_REF})\n- KernelSU Next git ref: [\`${KERNELSU_NEXT_GIT_REF}\`](https://github.com/rifsxd/kernelsu-next/commit/${KERNELSU_NEXT_GIT_REF})\n\n**Installation:**\n1. Flash the kernel from this release from the [OrangeFox](https://github.com/AndroidHQ254/Action-OFRP-Builder/releases) recovery.\n2. Download and install the [latest KernelSU Next manager APK](https://github.com/rifsxd/KernelSU-Next/releases/${KERNELSU_NEXT_VERSION})."
           fi
 
           if [ "${withSUSFS}" = "true" ]; then
             suffix="${suffix}_SUSFS-${SUSFS_VERSION}"
 
             release_name="${release_name} + SUSFS ${SUSFS_VERSION}"
-            release_description="Linux kernel for Xiaomi Mi Note 10 Lite (toco) patched with [KernelSU Next ${KERNELSU_NEXT_VERSION}](https://github.com/rifsxd/KernelSU-Next) + [SUSFS ${SUSFS_VERSION}](https://gitlab.com/simonpunk/susfs4ksu/-/tree/kernel-4.14).\n\n**Installation:**\n1. Flash the kernel from this release from the [OrangeFox](https://github.com/AndroidHQ254/Action-OFRP-Builder/releases) recovery.\n2. Download and install the [latest KernelSU Next manager APK](https://github.com/rifsxd/KernelSU-Next/releases/${KERNELSU_NEXT_VERSION}). \n3. Install the latest [susfs4ksu-module](https://github.com/sidex15/susfs4ksu-module/releases) in KernelSU Next."
+            release_description="Linux kernel for Xiaomi Mi Note 10 Lite (toco) patched with [KernelSU Next ${KERNELSU_NEXT_VERSION}](https://github.com/rifsxd/KernelSU-Next) + [SUSFS ${SUSFS_VERSION}](https://gitlab.com/simonpunk/susfs4ksu/-/tree/kernel-4.14).\n\n- Kernel git ref: [\`${KERNEL_GIT_REF}\`](${KERNEL_REPO}/commit/${KERNEL_GIT_REF})\n- KernelSU Next git ref: [\`${KERNELSU_NEXT_GIT_REF}\`](https://github.com/rifsxd/kernelsu-next/commit/${KERNELSU_NEXT_GIT_REF})\n- SUSFS git ref: [\`${SUSFS_GIT_REF}\`](https://github.com/devnoname120/susfs4ksu-toco/commit/${SUSFS_GIT_REF})\n\n**Installation:**\n1. Flash the kernel from this release from the [OrangeFox](https://github.com/AndroidHQ254/Action-OFRP-Builder/releases) recovery.\n2. Download and install the [latest KernelSU Next manager APK](https://github.com/rifsxd/KernelSU-Next/releases/${KERNELSU_NEXT_VERSION}). \n3. Install the latest [susfs4ksu-module](https://github.com/sidex15/susfs4ksu-module/releases) in KernelSU Next."
           fi
 
 
