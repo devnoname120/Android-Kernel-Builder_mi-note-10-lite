@@ -184,7 +184,7 @@ jobs:
             branch=next-susfs
           fi
 
-          curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s ${branch}
+          curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s ${branch}
 
           KERNELSU_NEXT_VERSION=$(git -C KernelSU-Next describe --abbrev=0 --tags)
           KERNELSU_NEXT_GIT_REF=$(git -C KernelSU-Next rev-parse --short HEAD)
@@ -293,14 +293,14 @@ jobs:
             suffix="${suffix}_KernelSU-Next-${KERNELSU_NEXT_VERSION}"
 
             release_name="${release_name} KernelSU Next ${KERNELSU_NEXT_VERSION}"
-            release_description="Linux kernel for Xiaomi Mi Note 10 Lite (toco) patched with [KernelSU Next ${KERNELSU_NEXT_VERSION}](https://github.com/rifsxd/KernelSU-Next).\n\n- Kernel git ref: [\`${KERNEL_GIT_REF}\`](${KERNEL_REPO}/commit/${KERNEL_GIT_REF})\n- KernelSU Next git ref: [\`${KERNELSU_NEXT_GIT_REF}\`](https://github.com/rifsxd/kernelsu-next/commit/${KERNELSU_NEXT_GIT_REF})\n\n**Installation:**\n1. Flash the kernel from this release from the [OrangeFox](https://github.com/AndroidHQ254/Action-OFRP-Builder/releases) recovery.\n2. Download and install the [latest KernelSU Next manager APK](https://github.com/rifsxd/KernelSU-Next/releases/${KERNELSU_NEXT_VERSION})."
+            release_description="Linux kernel for Xiaomi Mi Note 10 Lite (toco) patched with [KernelSU Next ${KERNELSU_NEXT_VERSION}](https://github.com/KernelSU-Next/KernelSU-Next).\n\n- Kernel git ref: [\`${KERNEL_GIT_REF}\`](${KERNEL_REPO}/commit/${KERNEL_GIT_REF})\n- KernelSU Next git ref: [\`${KERNELSU_NEXT_GIT_REF}\`](https://github.com/KernelSU-Next/KernelSU-Next/commit/${KERNELSU_NEXT_GIT_REF})\n\n**Installation:**\n1. Flash the kernel from this release from the [OrangeFox](https://github.com/AndroidHQ254/Action-OFRP-Builder/releases) recovery.\n2. Download and install the [latest KernelSU Next manager APK](https://github.com/KernelSU-Next/KernelSU-Next/releases/${KERNELSU_NEXT_VERSION})."
           fi
 
           if [ "${withSUSFS}" = "true" ]; then
             suffix="${suffix}_SUSFS-${SUSFS_VERSION}"
 
             release_name="${release_name} + SUSFS ${SUSFS_VERSION}"
-            release_description="Linux kernel for Xiaomi Mi Note 10 Lite (toco) patched with [KernelSU Next ${KERNELSU_NEXT_VERSION}](https://github.com/rifsxd/KernelSU-Next) + [SUSFS ${SUSFS_VERSION}](https://gitlab.com/simonpunk/susfs4ksu/-/tree/kernel-4.14).\n\n- Kernel git ref: [\`${KERNEL_GIT_REF}\`](${KERNEL_REPO}/commit/${KERNEL_GIT_REF})\n- KernelSU Next git ref: [\`${KERNELSU_NEXT_GIT_REF}\`](https://github.com/rifsxd/kernelsu-next/commit/${KERNELSU_NEXT_GIT_REF})\n- SUSFS git ref: [\`${SUSFS_GIT_REF}\`](https://github.com/devnoname120/susfs4ksu-toco/commit/${SUSFS_GIT_REF})\n\n**Installation:**\n1. Flash the kernel from this release from the [OrangeFox](https://github.com/AndroidHQ254/Action-OFRP-Builder/releases) recovery.\n2. Download and install the [latest KernelSU Next manager APK](https://github.com/rifsxd/KernelSU-Next/releases/${KERNELSU_NEXT_VERSION}). \n3. Install the latest [susfs4ksu-module](https://github.com/sidex15/susfs4ksu-module/releases) in KernelSU Next."
+            release_description="Linux kernel for Xiaomi Mi Note 10 Lite (toco) patched with [KernelSU Next ${KERNELSU_NEXT_VERSION}](https://github.com/KernelSU-Next/KernelSU-Next) + [SUSFS ${SUSFS_VERSION}](https://gitlab.com/simonpunk/susfs4ksu/-/tree/kernel-4.14).\n\n- Kernel git ref: [\`${KERNEL_GIT_REF}\`](${KERNEL_REPO}/commit/${KERNEL_GIT_REF})\n- KernelSU Next git ref: [\`${KERNELSU_NEXT_GIT_REF}\`](https://github.com/KernelSU-Next/KernelSU-Next/commit/${KERNELSU_NEXT_GIT_REF})\n- SUSFS git ref: [\`${SUSFS_GIT_REF}\`](https://github.com/devnoname120/susfs4ksu-toco/commit/${SUSFS_GIT_REF})\n\n**Installation:**\n1. Flash the kernel from this release from the [OrangeFox](https://github.com/AndroidHQ254/Action-OFRP-Builder/releases) recovery.\n2. Download and install the [latest KernelSU Next manager APK](https://github.com/KernelSU-Next/KernelSU-Next/releases/${KERNELSU_NEXT_VERSION}). \n3. Install the latest [susfs4ksu-module](https://github.com/sidex15/susfs4ksu-module/releases) in KernelSU Next."
           fi
 
 
