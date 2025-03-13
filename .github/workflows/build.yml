@@ -181,7 +181,7 @@ jobs:
 
           branch=next
           if [ "${withSUSFS}" = "true" ]; then
-            branch=next-susfs
+            branch=next-susfs-dev
           fi
 
           curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s ${branch}
@@ -230,7 +230,7 @@ jobs:
           cp SUSFS/kernel_patches/fs/* fs/
           cp SUSFS/kernel_patches/include/linux/* include/linux/
 
-          # Branch `next-susfs` of KernelSU-Next now has the SUSFS patches already applied so we don't need this line anymore (for now at least)
+          # Branches `next-susfs` and `next-susfs-dev` of KernelSU-Next now have the SUSFS patches already applied so we don't need this line anymore (for now at least)
           # patch -d KernelSU-Next -p1 --verbose < SUSFS/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch
 
           patch -p1 --verbose < SUSFS/kernel_patches/40_ksu_without_kprobes.patch
