@@ -21,19 +21,7 @@
       "CC": "clang",
       "externalCommand": {
         "LLVM": "1",
-        "HOSTCC": "clang",
-        "KCFLAGS": "--target=aarch64-linux-gnu",
-        "KAFLAGS": "--target=aarch64-linux-gnu",
-        "LD": "ld.lld",
-        "AR": "llvm-ar",
-        "NM": "llvm-nm",
-        "OBJCOPY": "llvm-objcopy",
-        "OBJDUMP": "llvm-objdump",
-        "READELF": "llvm-readelf",
-        "OBJSIZE": "llvm-size",
-        "STRIP": "llvm-strip",
-        "LLVM_AR": "llvm-ar",
-        "LLVM_DIS": "llvm-dis",
+        "CROSS_COMPILE": "aarch64-linux-gnu-",
         "EXTRAVERSION": "-perf"
       }
     },
@@ -66,19 +54,7 @@
       "CC": "clang",
       "externalCommand": {
         "LLVM": "1",
-        "HOSTCC": "clang",
-        "KCFLAGS": "--target=aarch64-linux-gnu",
-        "KAFLAGS": "--target=aarch64-linux-gnu",
-        "LD": "ld.lld",
-        "AR": "llvm-ar",
-        "NM": "llvm-nm",
-        "OBJCOPY": "llvm-objcopy",
-        "OBJDUMP": "llvm-objdump",
-        "READELF": "llvm-readelf",
-        "OBJSIZE": "llvm-size",
-        "STRIP": "llvm-strip",
-        "LLVM_AR": "llvm-ar",
-        "LLVM_DIS": "llvm-dis",
+        "CROSS_COMPILE": "aarch64-linux-gnu-",
         "EXTRAVERSION": "-perf"
       }
     },
@@ -111,19 +87,7 @@
       "CC": "clang",
       "externalCommand": {
         "LLVM": "1",
-        "HOSTCC": "clang",
-        "KCFLAGS": "--target=aarch64-linux-gnu",
-        "KAFLAGS": "--target=aarch64-linux-gnu",
-        "LD": "ld.lld",
-        "AR": "llvm-ar",
-        "NM": "llvm-nm",
-        "OBJCOPY": "llvm-objcopy",
-        "OBJDUMP": "llvm-objdump",
-        "READELF": "llvm-readelf",
-        "OBJSIZE": "llvm-size",
-        "STRIP": "llvm-strip",
-        "LLVM_AR": "llvm-ar",
-        "LLVM_DIS": "llvm-dis",
+        "CROSS_COMPILE": "aarch64-linux-gnu-",
         "EXTRAVERSION": "-perf"
       }
     },

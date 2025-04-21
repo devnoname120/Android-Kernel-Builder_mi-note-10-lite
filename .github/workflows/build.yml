@@ -100,7 +100,7 @@ jobs:
               git clone --recursive --depth=1 -j $(nproc) --branch ${toolchain_branch} ${toolchain_repo} ${toolchain_name}
               echo "🤔 Clone ${toolchain_name} => (${toolchain_repo})"
             else
-              wget "${toolchain_url}"
+              wget -q "${toolchain_url}"
               filename="${toolchain_url##*/}"
               mkdir -p ${toolchain_name}
               case "${filename}" in
