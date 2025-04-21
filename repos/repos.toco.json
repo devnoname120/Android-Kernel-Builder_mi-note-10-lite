@@ -22,8 +22,7 @@
       "externalCommand": {
         "CC": "clang/bin/clang",
         "LLVM": "1",
-        "KCFLAGS": "--target=aarch64-linux-gnu",
-        "KAFLAGS": "--target=aarch64-linux-gnu",
+        "CLANG_TRIPLE": "aarch64-linux-gnu-",
         "LD": "clang/bin/ld.lld",
         "AR": "clang/bin/llvm-ar",
         "NM": "clang/bin/llvm-nm",
@@ -67,8 +66,7 @@
       "externalCommand": {
         "CC": "clang/bin/clang",
         "LLVM": "1",
-        "KCFLAGS": "--target=aarch64-linux-gnu",
-        "KAFLAGS": "--target=aarch64-linux-gnu",
+        "CLANG_TRIPLE": "aarch64-linux-gnu-",
         "LD": "clang/bin/ld.lld",
         "AR": "clang/bin/llvm-ar",
         "NM": "clang/bin/llvm-nm",
@@ -112,8 +110,7 @@
       "externalCommand": {
         "CC": "clang/bin/clang",
         "LLVM": "1",
-        "KCFLAGS": "--target=aarch64-linux-gnu",
-        "KAFLAGS": "--target=aarch64-linux-gnu",
+        "CLANG_TRIPLE": "aarch64-linux-gnu-",
         "LD": "clang/bin/ld.lld",
         "AR": "clang/bin/llvm-ar",
         "NM": "clang/bin/llvm-nm",
