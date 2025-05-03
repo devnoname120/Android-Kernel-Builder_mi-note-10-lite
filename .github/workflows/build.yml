@@ -33,7 +33,7 @@ jobs:
     needs:
       - Set-repos
     strategy:
-      max-parallel: 4
+      max-parallel: 8
       fail-fast: false
       matrix:
         repos: ${{ fromJSON(needs.Set-repos.outputs.repos) }}
@@ -51,9 +51,15 @@ jobs:
 
       withKernelSU: ${{ matrix.repos.withKernelSU }}
       withSUSFS: ${{ matrix.repos.withSUSFS }}
+      withLXC: ${{ matrix.repos.withLXC }}
       useAnykernel: ${{ matrix.repos.AnyKernel3.use }}
       release: ${{ matrix.repos.AnyKernel3.release }}
     steps:
+      - name: "😄 Checkout"
+        uses: actions/checkout@v3
+        with:
+          path: "repo"
+
       - name: "⭐ Install prerequisites"
         run: |
           sudo apt-get update
@@ -260,6 +266,56 @@ jobs:
 
           cat arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
 
+      # TODO: maybe use this instead: https://github.com/tomxi1997/lxc-docker-support-for-android/
+      - name: 🚢 Setup LXC docker
+        working-directory: ${{ env.KERNEL_NAME }}
+        env:
+          arch: ${{ steps.generate-args.outputs.ARCH }}
+          ADD_DEFCONFIG: ${{ env.WORKSPACE }}/repo/LXC_defconfig
+        if: ${{ env.withLXC == 'true' }}
+        run: |
+          # Credits go to: https://github.com/DogDayAndroid/Android-Builder/blob/8c3c69ce1b2974c7351b2b48f249d2b700f91a8d/.github/workflows/kernel.yml#L253-L293
+          # Add configuration
+          for config in $(cat ${{ env.ADD_DEFCONFIG }})
+          do
+            echo $config >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          done
+          echo "🎖️ Apply defconfig"
+
+          # Apply patch
+          if [ -f kernel/Makefile ]; then
+            # Not strictly necessary but makes sure that moby's check-config.sh can accurately determine which feature is supported and which is not
+            # The downside is that by unspoofing the defconfig the following error dialog will appear at every boot (it can be dismissed though by clicking on OK):
+            # "There's an internal problem with your device. Contact your manufacturer for details."
+            sed -i 's|^\$(obj)/config_data\.gz:.*$|$(obj)/config_data.gz: $(KCONFIG_CONFIG) FORCE|' kernel/Makefile
+            echo "🎖️ Modify kernel/Makefile to unspoof defconfig"
+          fi
+          if [ -f kernel/cgroup.c ]; then
+            row=$(sed -n -e '/^static int cgroup_add_file/=' kernel/cgroup.c)
+            touch /tmp/tmp.txt
+            sed -n -e '/static int cgroup_add_file/,/return 0/p' kernel/cgroup.c >> /tmp/tmp.txt
+            row2=$(sed -n -e '/return 0/=' /tmp/tmp.txt)
+            row3=$(echo `expr $row + $row2 - 1`)
+            sed -i "$row3 i\        }" kernel/cgroup.c
+            sed -i "$row3 i\                kernfs_create_link(cgrp->kn, name, kn);" kernel/cgroup.c
+            sed -i "$row3 i\                snprintf(name, CGROUP_FILE_NAME_MAX, \"%s.%s\", cft->ss->name, cft->name);" kernel/cgroup.c
+            sed -i "$row3 i\        if (cft->ss && (cgrp->root->flags & CGRP_ROOT_NOPREFIX) && !(cft->flags & CFTYPE_NO_PREFIX)) {" kernel/cgroup.c
+            echo "🎖️ Modify kernel/cgroup.c"
+          fi
+          if [ -f kernel/cgroup/cgroup.c ]; then
+            row=$(sed -n -e '/^static int cgroup_add_file/=' kernel/cgroup/cgroup.c)
+            touch /tmp/tmp.txt
+            sed -n -e '/static int cgroup_add_file/,/return 0/p' kernel/cgroup/cgroup.c >> /tmp/tmp.txt
+            row2=$(sed -n -e '/return 0/=' /tmp/tmp.txt)
+            row3=$(echo `expr $row + $row2 - 1`)
+            sed -i "$row3 i\        }" kernel/cgroup/cgroup.c
+            sed -i "$row3 i\                kernfs_create_link(cgrp->kn, name, kn);" kernel/cgroup/cgroup.c
+            sed -i "$row3 i\                snprintf(name, CGROUP_FILE_NAME_MAX, \"%s.%s\", cft->ss->name, cft->name);" kernel/cgroup/cgroup.c
+            sed -i "$row3 i\        if (cft->ss && (cgrp->root->flags & CGRP_ROOT_NOPREFIX) && !(cft->flags & CFTYPE_NO_PREFIX)) {" kernel/cgroup/cgroup.c
+            echo "🎖️ Modify kernel/cgroup/cgroup.c"
+          fi
+          # net/netfilter/xt_qtaguid.c patch is omitted because we build for kernel 4.14 and starting from kernel 4.9 this file was removed in favor of eBPF
+
       - name: "👍 Make defconfig"
         working-directory: ${{ env.KERNEL_NAME }}
         env:
@@ -284,7 +340,7 @@ jobs:
           prefix="${KERNEL_DEVICE}-${KERNEL_NAME}-${builddate}"
           suffix=
 
-          if [ "${withKernelSU}" != "true" ] && [ "${withSUSFS}" != "true" ]; then
+          if [ "${withKernelSU}" != "true" ] && [ "${withSUSFS}" != "true" ] && [ "${withLXC}" != "true" ]; then
             release_name="${release_name} Normal kernel (untouched)"
             release_description="Untouched Linux kernel for Xiaomi Mi Note 10 Lite (toco). This release does **NOT** have KernelSU Next or SUSFS.\n\n- Kernel git ref: [\`${KERNEL_GIT_REF}\`](${KERNEL_REPO}/commit/${KERNEL_GIT_REF})\n\n**Installation:**\n1. Flash the kernel from this release from the [OrangeFox](https://github.com/AndroidHQ254/Action-OFRP-Builder/releases) recovery.\n2. Done."
           fi
@@ -301,6 +357,13 @@ jobs:
 
             release_name="${release_name} + SUSFS ${SUSFS_VERSION}"
             release_description="Linux kernel for Xiaomi Mi Note 10 Lite (toco) patched with [KernelSU Next ${KERNELSU_NEXT_VERSION}](https://github.com/KernelSU-Next/KernelSU-Next) + [SUSFS ${SUSFS_VERSION}](https://gitlab.com/simonpunk/susfs4ksu/-/tree/kernel-4.14).\n\n- Kernel git ref: [\`${KERNEL_GIT_REF}\`](${KERNEL_REPO}/commit/${KERNEL_GIT_REF})\n- KernelSU Next git ref: [\`${KERNELSU_NEXT_GIT_REF}\`](https://github.com/KernelSU-Next/KernelSU-Next/commit/${KERNELSU_NEXT_GIT_REF})\n- SUSFS git ref: [\`${SUSFS_GIT_REF}\`](https://github.com/devnoname120/susfs4ksu-toco/commit/${SUSFS_GIT_REF})\n\n**Installation:**\n1. Flash the kernel from this release from the [OrangeFox](https://github.com/AndroidHQ254/Action-OFRP-Builder/releases) recovery.\n2. Download and install the [latest KernelSU Next manager APK](https://github.com/KernelSU-Next/KernelSU-Next/releases/${KERNELSU_NEXT_VERSION}). \n3. Install the latest [susfs4ksu-module](https://github.com/sidex15/susfs4ksu-module/releases) in KernelSU Next."
+          fi
+
+          if [ "${withLXC}" = "true" ]; then
+            suffix="${suffix}_LXC"
+
+            release_name="${release_name} + LXC (for Docker support)"
+            release_description="Linux kernel for Xiaomi Mi Note 10 Lite (toco) patched with [KernelSU Next ${KERNELSU_NEXT_VERSION}](https://github.com/KernelSU-Next/KernelSU-Next) + [SUSFS ${SUSFS_VERSION}](https://gitlab.com/simonpunk/susfs4ksu/-/tree/kernel-4.14) + LXC for Docker support.\n\n- Kernel git ref: [\`${KERNEL_GIT_REF}\`](${KERNEL_REPO}/commit/${KERNEL_GIT_REF})\n- KernelSU Next git ref: [\`${KERNELSU_NEXT_GIT_REF}\`](https://github.com/KernelSU-Next/KernelSU-Next/commit/${KERNELSU_NEXT_GIT_REF})\n- SUSFS git ref: [\`${SUSFS_GIT_REF}\`](https://github.com/devnoname120/susfs4ksu-toco/commit/${SUSFS_GIT_REF})\n\n**Installation:**\n1. Flash the kernel from this release from the [OrangeFox](https://github.com/AndroidHQ254/Action-OFRP-Builder/releases) recovery.\n2. Download and install the [latest KernelSU Next manager APK](https://github.com/KernelSU-Next/KernelSU-Next/releases/${KERNELSU_NEXT_VERSION}). \n3. Install the latest [susfs4ksu-module](https://github.com/sidex15/susfs4ksu-module/releases) in KernelSU Next. \n 4. Install the [Magisk Docker](https://github.com/mgksu/dockerd/releases) module to enable Docker support, then follow the instructions in the [README.md](https://github.com/mgksu/dockerd) for how to use it."
           fi
 
 
@@ -423,7 +486,7 @@ jobs:
         with:
           tag_name: ${{ steps.define-output-names.outputs.release_tag }}
           name: ${{ steps.define-output-names.outputs.release_name }}
-          make_latest: ${{ env.withKernelSU == 'true' && env.withSUSFS == 'true' }}
+          make_latest: ${{ env.withKernelSU == 'true' && env.withSUSFS == 'true' && env.withLXC != 'true' }}
           prerelease: false
           draft: false
           generate_release_notes: false
