@@ -9,6 +9,7 @@
     },
     "withKernelSU": false,
     "withSUSFS": false,
+    "withLXC": false,
     "toolchains": [
       {
         "name": "clang",
@@ -42,6 +43,7 @@
     },
     "withKernelSU": true,
     "withSUSFS": false,
+    "withLXC": false,
     "toolchains": [
       {
         "name": "clang",
@@ -75,6 +77,75 @@
     },
     "withKernelSU": true,
     "withSUSFS": true,
+    "withLXC": false,
+    "toolchains": [
+      {
+        "name": "clang",
+        "url": "https://github.com/devnoname120/android_prebuilts_clang-standalone/releases/download/linux-x86-refs_heads_android15-qpr2-release-clang-r530567/linux-x86-refs_heads_android15-qpr2-release-clang-r530567.tar.gz",
+        "binPath": ["./bin"]
+      }
+    ],
+    "params": {
+      "ARCH": "arm64",
+      "CC": "clang",
+      "externalCommand": {
+        "LLVM": "1",
+        "CROSS_COMPILE": "aarch64-linux-gnu-",
+        "EXTRAVERSION": "-perf"
+      }
+    },
+    "AnyKernel3": {
+      "use": true,
+      "release": true,
+      "repo": "https://github.com/devnoname120/AnyKernel3/",
+      "branch": "toco"
+    }
+  },
+  {
+    "kernelSource": {
+      "name": "VantomKernel",
+      "repo": "https://github.com/devnoname120/kernel_xiaomi_sm6150",
+      "branch": "fifteen",
+      "device": "toco",
+      "defconfig": "toco_defconfig"
+    },
+    "withKernelSU": true,
+    "withSUSFS": false,
+    "withLXC": true,
+    "toolchains": [
+      {
+        "name": "clang",
+        "url": "https://github.com/devnoname120/android_prebuilts_clang-standalone/releases/download/linux-x86-refs_heads_android15-qpr2-release-clang-r530567/linux-x86-refs_heads_android15-qpr2-release-clang-r530567.tar.gz",
+        "binPath": ["./bin"]
+      }
+    ],
+    "params": {
+      "ARCH": "arm64",
+      "CC": "clang",
+      "externalCommand": {
+        "LLVM": "1",
+        "CROSS_COMPILE": "aarch64-linux-gnu-",
+        "EXTRAVERSION": "-perf"
+      }
+    },
+    "AnyKernel3": {
+      "use": true,
+      "release": true,
+      "repo": "https://github.com/devnoname120/AnyKernel3/",
+      "branch": "toco"
+    }
+  },
+  {
+    "kernelSource": {
+      "name": "VantomKernel",
+      "repo": "https://github.com/devnoname120/kernel_xiaomi_sm6150",
+      "branch": "fifteen",
+      "device": "toco",
+      "defconfig": "toco_defconfig"
+    },
+    "withKernelSU": true,
+    "withSUSFS": true,
+    "withLXC": true,
     "toolchains": [
       {
         "name": "clang",
