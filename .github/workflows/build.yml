@@ -275,7 +275,7 @@ jobs:
         working-directory: ${{ env.KERNEL_NAME }}
         env:
           arch: ${{ steps.generate-args.outputs.ARCH }}
-          ADD_DEFCONFIG: ${{ env.WORKSPACE }}/repo/LXC_defconfig
+          ADD_DEFCONFIG: ${{ env.WORKSPACE }}/repo/LXC/LXC_defconfig
         if: ${{ env.withLXC == 'true' }}
         run: |
           # Credits go to: https://github.com/DogDayAndroid/Android-Builder/blob/8c3c69ce1b2974c7351b2b48f249d2b700f91a8d/.github/workflows/kernel.yml#L253-L293
@@ -296,7 +296,7 @@ jobs:
           fi
           if [ -f kernel/cgroup.c ]; then
             row=$(sed -n -e '/^static int cgroup_add_file/=' kernel/cgroup.c)
-            touch /tmp/tmp.txt
+            rm -f /tmp/tmp.txt && touch /tmp/tmp.txt
             sed -n -e '/static int cgroup_add_file/,/return 0/p' kernel/cgroup.c >> /tmp/tmp.txt
             row2=$(sed -n -e '/return 0/=' /tmp/tmp.txt)
             row3=$(echo `expr $row + $row2 - 1`)
@@ -308,7 +308,7 @@ jobs:
           fi
           if [ -f kernel/cgroup/cgroup.c ]; then
             row=$(sed -n -e '/^static int cgroup_add_file/=' kernel/cgroup/cgroup.c)
-            touch /tmp/tmp.txt
+            rm -f /tmp/tmp.txt && touch /tmp/tmp.txt
             sed -n -e '/static int cgroup_add_file/,/return 0/p' kernel/cgroup/cgroup.c >> /tmp/tmp.txt
             row2=$(sed -n -e '/return 0/=' /tmp/tmp.txt)
             row3=$(echo `expr $row + $row2 - 1`)
@@ -317,6 +317,28 @@ jobs:
             sed -i "$row3 i\                snprintf(name, CGROUP_FILE_NAME_MAX, \"%s.%s\", cft->ss->name, cft->name);" kernel/cgroup/cgroup.c
             sed -i "$row3 i\        if (cft->ss && (cgrp->root->flags & CGRP_ROOT_NOPREFIX) && !(cft->flags & CFTYPE_NO_PREFIX)) {" kernel/cgroup/cgroup.c
             echo "🎖️ Modify kernel/cgroup/cgroup.c"
+          fi
+          # Fix "failed to start daemon: error initializing graphdriver: driver not supported: overlay2"
+          # Reference: https://github.com/android-kxxt/android_kernel_xiaomi_sm8450/commit/e6114a39e9e6d7a0c96b0c4db354b43cb5f40fed
+          if [ -f fs/overlayfs/util.c ]; then
+            sed -i '/^bool ovl_dentry_weird(/,/^}/ {
+              # replace the line: “DCACHE_MANAGE_TRANSIT |” with “DCACHE_MANAGE_TRANSIT”
+              s/\(^[[:space:]]*DCACHE_MANAGE_TRANSIT\)[[:space:]]*|$/\1);/
+
+              # delete the line: “DCACHE_OP_HASH |” (if exists)
+              /^[[:space:]]*DCACHE_OP_HASH |$/d
+
+              # delete the line: “DCACHE_OP_HASH);” (if exists)
+              /^[[:space:]]*DCACHE_OP_HASH);$/d
+
+              # delete the line: “DCACHE_OP_COMPARE |” (if exists)
+              /^[[:space:]]*DCACHE_OP_COMPARE |$/d
+
+              # delete the line: “DCACHE_OP_COMPARE);” (if exists)
+              /^[[:space:]]*DCACHE_OP_COMPARE);$/d
+
+            }' fs/overlayfs/util.c
+            echo "🎖️ Modify fs/overlayfs/util.c"
           fi
           # net/netfilter/xt_qtaguid.c patch is omitted because we build for kernel 4.14 and starting from kernel 4.9 this file was removed in favor of eBPF
 
