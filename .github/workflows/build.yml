@@ -242,6 +242,9 @@ jobs:
           patch -p1 --verbose < SUSFS/kernel_patches/40_ksu_without_kprobes.patch
           patch -p1 --verbose < SUSFS/kernel_patches/50_add_susfs_in_kernel-4.14.patch
 
+          # TEMPORARY: SUSFS 1.5.7 is not yet available upstream so we apply this backported patch
+          patch -p1 --verbose < SUSFS/kernel_patches/BACKPORT-fs-upstream-susfs-v1.5.7-new-non-gki.patch
+
           # Disable kprobes because the manual patches were applied by 40_ksu_without_kprobes.patch
           echo -e "CONFIG_KPROBES=n" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
           echo -e "CONFIG_HAVE_KPROBES=n" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
