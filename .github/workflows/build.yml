@@ -226,9 +226,6 @@ jobs:
 
           git clone --recursive -j $(nproc) --branch ${SUSFS_BRANCH} https://github.com/devnoname120/susfs4ksu-toco SUSFS
 
-          SUSFS_VERSION=$(grep -oP '^\s*#define\s+SUSFS_VERSION\s+"\K[^"]+' SUSFS/kernel_patches/include/linux/susfs.h)
-          echo -e "SUSFS_VERSION=${SUSFS_VERSION}" >> ${GITHUB_OUTPUT}
-          echo -e "\n💡 SUSFS version: ${SUSFS_VERSION}\n"
 
           SUSFS_GIT_REF=$(git -C SUSFS rev-parse --short HEAD)
           echo -e "SUSFS_GIT_REF=${SUSFS_GIT_REF}" >> ${GITHUB_OUTPUT}
@@ -244,6 +241,10 @@ jobs:
 
           # TEMPORARY: SUSFS 1.5.7 is not yet available upstream so we apply this backported patch
           patch -p1 --verbose < SUSFS/kernel_patches/BACKPORT-fs-upstream-susfs-v1.5.7-new-non-gki.patch
+
+          SUSFS_VERSION=$(grep -oP '^\s*#define\s+SUSFS_VERSION\s+"\K[^"]+' include/linux/susfs.h)
+          echo -e "SUSFS_VERSION=${SUSFS_VERSION}" >> ${GITHUB_OUTPUT}
+          echo -e "\n💡 SUSFS version: ${SUSFS_VERSION}\n"
 
           # Disable kprobes because the manual patches were applied by 40_ksu_without_kprobes.patch
           echo -e "CONFIG_KPROBES=n" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
