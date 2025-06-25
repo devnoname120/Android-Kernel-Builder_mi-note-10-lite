@@ -186,9 +186,6 @@ jobs:
           fi
 
           branch=next
-          if [ "${withSUSFS}" = "true" ]; then
-            branch=next-susfs-dev
-          fi
 
           curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s ${branch}
 
@@ -204,6 +201,10 @@ jobs:
           echo -e "CONFIG_KPROBE_EVENTS=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
 
           echo -e 'CONFIG_KSU=y' >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e 'CONFIG_KSU_KPROBES_HOOK=y' >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e 'CONFIG_KSU_DEBUG=n' >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e 'CONFIG_KSU_ALLOWLIST_WORKAROUND=n' >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e 'CONFIG_KSU_LSM_SECURITY_HOOKS=y' >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
 
           cat arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
 
@@ -221,7 +222,7 @@ jobs:
             rm -rf "./SUSFS"
           fi
 
-          SUSFS_BRANCH=kernel-4.14
+          SUSFS_BRANCH=kernel-4.14-backport
           echo -e "SUSFS_BRANCH=${SUSFS_BRANCH}" >> ${GITHUB_OUTPUT}
 
           git clone --recursive -j $(nproc) --branch ${SUSFS_BRANCH} https://github.com/devnoname120/susfs4ksu-toco SUSFS
@@ -233,14 +234,10 @@ jobs:
           cp SUSFS/kernel_patches/fs/* fs/
           cp SUSFS/kernel_patches/include/linux/* include/linux/
 
-          # Branches `next-susfs` and `next-susfs-dev` of KernelSU-Next now have the SUSFS patches already applied so we don't need this line anymore (for now at least)
-          # patch -d KernelSU-Next -p1 --verbose < SUSFS/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch
+          patch -d KernelSU-Next -p1 --verbose < SUSFS/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch
 
           patch -p1 --verbose < SUSFS/kernel_patches/40_ksu_without_kprobes.patch
           patch -p1 --verbose < SUSFS/kernel_patches/50_add_susfs_in_kernel-4.14.patch
-
-          # TEMPORARY: SUSFS 1.5.7 is not yet available upstream so we apply this backported patch
-          patch -p1 --verbose < SUSFS/kernel_patches/BACKPORT-fs-upstream-susfs-v1.5.7-new-non-gki.patch
 
           SUSFS_VERSION=$(grep -oP '^\s*#define\s+SUSFS_VERSION\s+"\K[^"]+' include/linux/susfs.h)
           echo -e "SUSFS_VERSION=${SUSFS_VERSION}" >> ${GITHUB_OUTPUT}
@@ -250,6 +247,7 @@ jobs:
           echo -e "CONFIG_KPROBES=n" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
           echo -e "CONFIG_HAVE_KPROBES=n" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
           echo -e "CONFIG_KPROBE_EVENTS=n" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e 'CONFIG_KSU_KPROBES_HOOK=n' >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
 
           echo -e "CONFIG_KSU_SUSFS=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
           echo -e "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
@@ -258,7 +256,6 @@ jobs:
           echo -e "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
           echo -e "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
           echo -e "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
-          echo -e "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
           echo -e "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
           echo -e "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
           echo -e "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> arch/${{ env.arch }}/configs/${{ env.DEFCONFIG_NAME }}
