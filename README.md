@@ -8,8 +8,8 @@ English | [中文](./README_cn.md)
 
 ![License](https://img.shields.io/static/v1?label=License&message=BY-NC-SA&logo=creativecommons&color=green)
 ![Language](https://img.shields.io/github/languages/top/DogDayAndroid/Android-Kernel-Builder)
-![Issues](https://img.shields.io/github/issues/DogDayAndroid/Android-Kernel-Builder)
-![Pull Requests](https://img.shields.io/github/issues-pr/DogDayAndroid/Android-Kernel-Builder)
+![Issues](https://img.shields.io/github/issues/devnoname120/Android-Kernel-Builder_mi-note-10-lite)
+![Pull Requests](https://img.shields.io/github/issues-pr/devnoname120/Android-Kernel-Builder_mi-note-10-lite)
 <br>
 
 This Github Action helps you build kernels. It reads multiple kernel sources from a configuration file and builds them using different toolchains. Additionally, it supports patching the kernel with KernelSU and uploading the built kernel image.
@@ -26,7 +26,7 @@ This Github Action helps you build kernels. It reads multiple kernel sources fro
 </div>
 
 # Github Action
-[![Build kernels](https://github.com/AndroidHQ254/Android-Kernel-Builder/actions/workflows/build.yml/badge.svg?event=workflow_dispatch)](https://github.com/AndroidHQ254/Android-Kernel-Builder/actions/workflows/build.yml)
+[![Build kernels](https://github.com/devnoname120/Android-Kernel-Builder_mi-note-10-lite/actions/workflows/build.yml/badge.svg?event=workflow_dispatch)](https://github.com/devnoname120/Android-Kernel-Builder_mi-note-10-lite/actions/workflows/build.yml)
 
 This action contains two jobs: `Set-repos` and `Build-Kernel`.
 
